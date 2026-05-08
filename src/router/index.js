@@ -1,12 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 
-import Login from '../views/Login.vue'
-import Home from '../views/Home.vue'
-import TableList from '../views/TableList.vue'
-import UserManager from '../views/UserManager.vue'
-import SystemSet from '../views/SystemSet.vue'
-
-// 1. 先定义路由表
 const routes = [
   {
     path: '/',
@@ -15,64 +8,55 @@ const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: Login
+    component: () => import('../views/Login.vue')
   },
   {
     path: '/home',
     name: 'Home',
-    component: Home
+    component: () => import('../views/Home.vue'),
+    meta: { requiresAuth: true }
   },
   {
-    path: '/table',
-    name: 'TableList',
-    component: TableList
+  path: '/table',
+  name: 'TableList',
+  component: () => import('../views/TableList.vue'),
+  meta: { requiresAuth: true }
   },
   {
-    path: '/UserManager',
+    path: '/user',
     name: 'UserManager',
-    component: UserManager
+    component: () => import('../views/UserManager.vue'),
+    meta: { requiresAuth: true }
   },
   {
-    path: '/systemSet',
+    path: '/system',
     name: 'SystemSet',
-    component: SystemSet
+    component: () => import('../views/SystemSet.vue'), // 这里已修复！！！
+    meta: { requiresAuth: true }
   },
-  // 404 页面（必须放在所有路由的最后）
-  { 
-    path: '/404', 
-    component: () => import('../views/404.vue') 
+  {
+    path: '/404',
+    name: '404',
+    component: () => import('../views/404.vue')
   },
-  { 
-    path: '/:pathMatch(.*)*', 
-    redirect: '/404' 
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/404'
   }
 ]
 
-// 2. 再创建 router
 const router = createRouter({
   history: createWebHashHistory(),
   routes
 })
 
-// ========== 全局路由守卫 ==========
 router.beforeEach((to, from, next) => {
-  const isLogin = localStorage.getItem('isLogin')
-
-  // 访问登录页时
-  if (to.path === '/login') {
-    // 已登录则直接跳首页
-    if (isLogin) {
-      next('/home')
-    } else {
-      next()
-    }
+  const isLogin = localStorage.getItem('isLogin') === 'true'
+  if (to.meta.requiresAuth) {
+    if (isLogin) next()
+    else next('/login')
   } else {
-    // 未登录则跳登录页
-    if (!isLogin) {
-      next('/login')
-    } else {
-      next()
-    }
+    next()
   }
 })
 
